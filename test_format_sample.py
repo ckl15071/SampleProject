@@ -441,8 +441,18 @@ def test_preserves_comment_columns_after_semicolon_and_call_spacing_changes():
     out = format_c_text(src)
     output_lines = out.splitlines()
 
-    assert 'test(  );' in output_lines[0]
+    assert 'test();' in output_lines[0]
     assert [
         line.index('//') if '//' in line else line.index('/*')
         for line in output_lines
     ] == comment_columns
+
+
+def test_configures_empty_function_call_parenthesis_spacing():
+    src = 'call(  );\n'
+
+    normalized = format_c_text(src, normalize_empty_function_call_spacing=True)
+    preserved = format_c_text(src, normalize_empty_function_call_spacing=False)
+
+    assert normalized == 'call();\n'
+    assert preserved == 'call(  );\n'

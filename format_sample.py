@@ -18,6 +18,8 @@ SOURCE_ENCODING = CONFIG['source_encoding']
 LINE_ENDING = CONFIG['line_ending']
 # Trueの場合、変数宣言の型名と変数名の間を1スペースに統一する。
 NORMALIZE_VARIABLE_DECLARATION_SPACING = CONFIG['normalize_variable_declaration_spacing']
+# Trueの場合、引数なし関数呼び出しの括弧内空白を削除する。
+NORMALIZE_EMPTY_FUNCTION_CALL_SPACING = CONFIG['normalize_empty_function_call_spacing']
 # (uint8_t)value のようなキャストを判定するためのC型パターン。
 CAST_TYPE_PATTERN = (
     r'(?:(?:const|volatile)\s+)*(?:(?:unsigned|signed|short|long)\s+)*'
@@ -188,6 +190,7 @@ def align_condition_closing_parentheses(text: str) -> str:
 def format_c_text(
     text: str,
     normalize_declaration_spacing: bool = NORMALIZE_VARIABLE_DECLARATION_SPACING,
+    normalize_empty_function_call_spacing: bool = NORMALIZE_EMPTY_FUNCTION_CALL_SPACING,
 ) -> str:
     """汎用的なCソース文字列フォーマッタ。
 
@@ -325,6 +328,9 @@ def format_c_text(
         normalize_function_call,
         text,
     )
+    if normalize_empty_function_call_spacing:
+        # 引数なし関数呼び出しの括弧内にある空白を削除する。
+        text = re.sub(r'(?P<name>[A-Za-z_][\w]*)\([ \t]*\)', r'\g<name>()', text)
 
     # 引数・初期化子の区切りコンマ後を1スペースにする。
     text = re.sub(r',[ \t]*', ', ', text)

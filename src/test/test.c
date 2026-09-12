@@ -1,4 +1,5 @@
-#include <stdio.h> #include "./test.h"
+#include <stdio.h>
+#include "./test.h"
 #include <stdint.h>
 
 void testTask( void );
@@ -58,8 +59,8 @@ void testTask( void )
 
 uint8_t u8_Encoder_GetValue( uint8_t u8_id )
 {
-    uint8_t             u8t_value1;
-    uint8_t u8t_value2;
-    u8t_value = u8g_value[ u8_id ];
+    uint8_t u8t_value1;             /* test  value */
+    uint8_t u8t_value2;             // test value
+    u8t_value = u8g_value[ u8_id ]; /* return */
     return u8t_value;
 }

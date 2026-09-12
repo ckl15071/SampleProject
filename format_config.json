@@ -4,5 +4,7 @@
     "_comment_line_ending": "フォーマッタが出力する改行コード。",
     "line_ending": "\r\n",
     "_comment_normalize_variable_declaration_spacing": "trueの場合、変数宣言の型名と変数名の間を1スペースに統一する。",
-    "normalize_variable_declaration_spacing": true
+    "normalize_variable_declaration_spacing": true,
+    "_comment_normalize_empty_function_call_spacing": "trueの場合、引数なしの関数呼び出しの括弧内空白を削除する。",
+    "normalize_empty_function_call_spacing": true
 }
