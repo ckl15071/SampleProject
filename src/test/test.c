@@ -2,7 +2,7 @@
 #include "./test.h"
 #include <stdint.h>
 
-void testTask(void);
+void testTask( void );
 
 uint8_t u8g_value[ 10 ];
 
@@ -37,8 +37,8 @@ void testTask( void )
     printf("u8_another: %u\n", u8_another);
     printf("testTask again\n");
 
-    if ( ( u8_test    == (uint8_t)0x00 )
-      && ( u8_another == (uint8_t)0x01 ) )
+        if ( ( u8_test == ( uint8_t )0x00 )
+            && ( u8_another == ( uint8_t )0x01 ) )
     {
         printf("u8_test is zero\n");
         for ( uint8_t i = 0; i < (uint8_t)10; i++ )

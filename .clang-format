@@ -14,3 +14,7 @@ SpaceAfterCStyleCast: false
 Cpp11BracedListStyle: true
 BreakBeforeBinaryOperators: NonAssignment
 AllowShortIfStatementsOnASingleLine: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+PointerAlignment: Left
+ReferenceAlignment: Left
