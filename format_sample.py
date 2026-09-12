@@ -5,6 +5,8 @@ from pathlib import Path
 
 SOURCE_ENCODING = 'shift_jis'
 LINE_ENDING = '\r\n'
+# Trueの場合、変数宣言の型名と変数名の間を1スペースに統一する。
+NORMALIZE_VARIABLE_DECLARATION_SPACING = True
 # (uint8_t)value のようなキャストを判定するためのC型パターン。
 CAST_TYPE_PATTERN = (
     r'(?:(?:const|volatile)\s+)*(?:(?:unsigned|signed|short|long)\s+)*'
@@ -58,10 +60,30 @@ def normalize_indentation(text: str) -> str:
 
 def normalize_and_condition_group_close(text: str) -> str:
     """&&条件行の内側の閉じ括弧直前を1スペースにする。"""
+    def normalize(match):
+        condition = re.sub(r'\s*(==|!=|<=|>=|<|>)\s*', r' \1 ', match.group('condition'))
+        return f'{match.group("indent")}&& ( {condition.rstrip()} ){match.group("outer")}'
+
     return re.sub(
         r'(?m)^(?P<indent>[ \t]*)&&[ \t]*\([ \t]*(?P<condition>.*\S)[ \t]*\)'
         r'(?P<outer>[ \t]*\)[ \t]*)$',
-        lambda m: f'{m.group("indent")}&& ( {m.group("condition").rstrip()} ){m.group("outer")}',
+        normalize,
+        text,
+    )
+
+
+def join_control_condition_line_breaks(text: str) -> str:
+    """制御文または&&の開き括弧直後にある改行を結合する。"""
+    text = re.sub(
+        r'(?m)^(?P<indent>[ \t]*)(?P<keyword>if|for|while|switch|&&)[ \t]*\([ \t]*\r?\n'
+        r'[ \t]*(?P<condition>[^\r\n]+)',
+        lambda m: f'{m.group("indent")}{m.group("keyword")} ( {m.group("condition").lstrip()}',
+        text,
+    )
+    return re.sub(
+        r'(?m)^(?P<condition>[ \t]*(?:if|for|while|switch|&&)[^\r\n]*)\r?\n'
+        r'[ \t]*(?P<close>\)+)[ \t]*$',
+        lambda m: f'{m.group("condition").rstrip()}{m.group("close")}',
         text,
     )
 
@@ -84,17 +106,21 @@ def align_condition_closing_parentheses(text: str) -> str:
         target_column = max(left_content_column, right_content_column) + 1
         left_padding = ' ' * (target_column - left_content_column)
         right_padding = ' ' * (target_column - right_content_column)
+        right_outer_close = match.group('right_suffix').strip()
         return (
             f'{match.group("left_prefix")}{match.group("left_body")}{left_padding})'
             f'{match.group("left_suffix")}{match.group("ending")}'
             f'{match.group("right_prefix")}{match.group("right_body")}{right_padding})'
-            f'{match.group("right_suffix")}'
+            f' {right_outer_close}'
         )
 
     return pattern.sub(align, text)
 
 
-def format_c_text(text: str) -> str:
+def format_c_text(
+    text: str,
+    normalize_declaration_spacing: bool = NORMALIZE_VARIABLE_DECLARATION_SPACING,
+) -> str:
     """汎用的なCソース文字列フォーマッタ。
 
     特定の関数名や変数名ではなく書式パターンだけを変換するため、
@@ -156,11 +182,20 @@ def format_c_text(text: str) -> str:
         r'union\s+[A-Za-z_][\w]*|[A-Za-z_][\w]*)(?:[ \t]*\*+)?'
     )
     text = re.sub(
-        rf'(?m)^(?P<indent>[ \t]*)(?P<type>{declaration_type})[ \t]*\r?\n'
+        rf'(?m)^(?P<indent>[ \t]*)(?P<type>{declaration_type})[ \t]*(?:\r?\n[ \t]*)+'
         r'[ \t]*(?P<name>[A-Za-z_][\w]*(?:[ \t]*\[[^\]\n]*\])?)[ \t]*;',
         lambda m: f'{m.group("indent")}{m.group("type")} {m.group("name")};',
         text,
     )
+    if normalize_declaration_spacing:
+        # 同一行にある変数宣言の型名と変数名の間を1スペースにする。
+        text = re.sub(
+            rf'(?m)^(?P<indent>[ \t]*)(?!(?:return|break|continue|goto)\b)'
+            rf'(?P<type>{declaration_type})[ \t]+(?P<name>[A-Za-z_][\w]*'
+            r'(?:[ \t]*\[[^\]\n]*\])?)[ \t]*;',
+            lambda m: f'{m.group("indent")}{m.group("type").strip()} {m.group("name")};',
+            text,
+        )
     text = re.sub(
         r'(?m)^(?P<indent>[ \t]*)(?P<name>[A-Za-z_][\w]*)[ \t]*\r?\n'
         r'[ \t]*\(\s*\)[ \t]*;',
@@ -168,18 +203,26 @@ def format_c_text(text: str) -> str:
         text,
     )
 
-    # 代入記号周辺で分かれた手動改行を結合し、=の前後を各1スペースにする。
+    # 代入記号周辺で分かれた手動改行・空行を結合し、=の前後を各1スペースにする。
     assignment_target = (
         r'[A-Za-z_][\w]*(?:[ \t]*(?:\.|->)[ \t]*[A-Za-z_][\w]*'
         r'|[ \t]*\[[^\]\n]+\])*'
     )
-    # 引数ありの関数呼び出しを name( arguments ) の形に整える。
     text = re.sub(
         rf'(?m)^(?P<indent>[ \t]*)(?P<lhs>{assignment_target})[ \t]*\r?\n'
-        r'[ \t]*=[ \t]*\r?\n[ \t]*(?P<rhs>[^\n;]+;)',
+        r'[ \t]*=[ \t]*\r?\n(?:[ \t]*\r?\n)*[ \t]*(?P<rhs>[^\n;]+;)',
         lambda m: f'{m.group("indent")}{m.group("lhs")} = {m.group("rhs").strip()}',
         text,
     )
+    text = re.sub(
+        rf'(?m)^(?P<indent>[ \t]*)(?P<lhs>{assignment_target})[ \t]*\r?\n'
+        rf'[ \t]*=[ \t]*(?P<cast>\(\s*{CAST_TYPE_PATTERN}\s*\))[ \t]*\r?\n'
+        r'[ \t]*(?P<value>[^\n;]+;)',
+        lambda m: f'{m.group("indent")}{m.group("lhs")} = '
+                  f'{m.group("cast")}{m.group("value").strip()}',
+        text,
+    )
+    # 引数ありの関数呼び出しを name( arguments ) の形に整える。
     text = re.sub(
         rf'(?m)^(?P<indent>[ \t]*)(?P<lhs>{assignment_target})[ \t]*=[ \t]*\r?\n'
         r'[ \t]*(?P<rhs>[^\n;]+;)',
@@ -208,6 +251,17 @@ def format_c_text(text: str) -> str:
     # 引数・初期化子の区切りコンマ後を1スペースにする。
     text = re.sub(r',[ \t]*', ', ', text)
 
+    # 比較演算子直後の改行を結合して、条件式を1行として扱えるようにする。
+    text = re.sub(
+        r'(?m)(?P<prefix>[ \t]*[^\r\n]*?(?:==|!=|<=|>=|<|>))[ \t]*\r?\n'
+        r'[ \t]*(?P<rhs>[^\r\n]+)',
+        lambda m: f'{m.group("prefix").rstrip()} {m.group("rhs").lstrip()}',
+        text,
+    )
+
+    # 制御文・&&の開き括弧直後に残る改行を先に結合する。
+    text = join_control_condition_line_breaks(text)
+
     # 分割済みif条件は、先頭行の条件書式を処理する前に整える。
     text = normalize_and_condition_group_close(text)
 
@@ -233,8 +287,23 @@ def format_c_text(text: str) -> str:
         text,
     )
 
-    # キャストの閉じ括弧と被キャスト値の間の空白を削除する。
+    # キャスト内部と、閉じ括弧と被キャスト値の間の空白を削除する。
+    text = re.sub(
+        rf'\([ \t]*(?P<type>{CAST_TYPE_PATTERN})[ \t]*\)(?=[ \t]*(?:[A-Za-z_]|[0-9]|\())',
+        lambda m: f'({re.sub(r"\s+", " ", m.group("type")).strip()})',
+        text,
+    )
     text = re.sub(rf'(?P<cast>\({CAST_TYPE_PATTERN}\))[ \t]+', r'\g<cast>', text)
+
+    # 文末セミコロンの直前にある空白を削除する。
+    text = re.sub(r'[ \t]+;', ';', text)
+
+    # 制御文ヘッダの直後にある波括弧を、次の行へ移動する。
+    text = re.sub(
+        r'(?m)^(?P<header>[ \t]*(?:if|for|while|switch)\b[^\r\n{]*\))[ \t]*\{[ \t]*$',
+        lambda m: f'{m.group("header").rstrip()}\n{m.group("header")[:len(m.group("header")) - len(m.group("header").lstrip())]}{{',
+        text,
+    )
 
     # 1行内の&&条件を、位置揃え対象の継続行へ分割する。
     text = re.sub(
@@ -247,7 +316,9 @@ def format_c_text(text: str) -> str:
     # 条件式内空白を確定してから列を揃え、最後にブロックのインデントを適用する。
     text = normalize_and_condition_group_close(text)
     text = align_condition_closing_parentheses(text)
-    return normalize_indentation(text)
+    text = normalize_indentation(text)
+    # 行末の不要なスペースとタブを削除する。
+    return re.sub(r'(?m)[ \t]+$', '', text)
 
 
 def format_c_file(path: str = 'src/test/test.c') -> None:

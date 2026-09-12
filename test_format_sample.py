@@ -186,6 +186,22 @@ void run(void)
     assert 'if ( value == (uint8_t)0x00 )' in out
 
 
+def test_joins_assignment_split_by_a_blank_line_after_equals():
+    src = '''
+void run(void)
+{
+    value
+    =
+
+    (uint8_t)0;
+}
+'''
+
+    out = format_c_text(src)
+
+    assert 'value = (uint8_t)0;' in out
+
+
 def test_adds_space_before_the_condition_group_close_on_and_lines():
     src = '''
 if ( ( left == 0 )
@@ -270,3 +286,104 @@ void run(void)
 
     assert '(void)value;' in out
     assert 'result = (uint8_t)0;' in out
+
+
+def test_joins_line_breaks_after_control_condition_opening_parentheses():
+    src = '''
+void run(void)
+{
+    if ( ( left == 0 )
+      && (
+    right == 1 )
+    )
+    {
+        for (
+        uint8_t index = 0; index < 10; index++
+        )
+        {
+            if (
+            values[ index ] == 0 )
+            {
+                return;
+            }
+        }
+    }
+}
+'''
+
+    out = format_c_text(src)
+
+    assert '&& ( right == 1 ) )' in out
+    assert 'for ( uint8_t index = 0; index < 10; index++ )' in out
+    assert 'if ( values[ index ] == 0 )' in out
+
+
+def test_normalizes_split_declarations_casts_assignments_and_comparisons():
+    src = '''
+void run(void)
+{
+    uint8_t
+
+    value;
+    uint8_t
+
+    other;
+
+    value = (  uint8_t  )   0;
+    other
+    = (uint8_t)
+    1;
+
+    if ( value==
+    (  uint8_t  )  0 )
+    {
+        return;
+    }
+}
+'''
+
+    out = format_c_text(src)
+
+    assert 'uint8_t value;' in out
+    assert 'uint8_t other;' in out
+    assert 'value = (uint8_t)0;' in out
+    assert 'other = (uint8_t)1;' in out
+    assert 'if ( value == (uint8_t)0 )' in out
+
+
+def test_removes_trailing_and_semicolon_spaces_and_splits_control_braces():
+    src = '''
+void run(void)
+{
+    value = (uint8_t)0   ;   
+    if ( ( left == 0 )
+      && ( right==(uint8_t)1 ) )
+    {
+        for ( uint8_t index = 0; index < 10; index++ ) {   
+            return;    
+        }
+    }
+}
+'''
+
+    out = format_c_text(src)
+
+    assert 'value = (uint8_t)0;' in out
+    assert '&& ( right == (uint8_t)1 ) )' in out
+    assert 'for ( uint8_t index = 0; index < 10; index++ )\n        {' in out
+    assert all(not line.endswith((' ', '\t')) for line in out.splitlines())
+
+
+def test_configures_variable_declaration_spacing_normalization():
+    src = '''
+void run(void)
+{
+    uint8_t             value;
+}
+'''
+
+    normalized = format_c_text(src, normalize_declaration_spacing=True)
+    preserved = format_c_text(src, normalize_declaration_spacing=False)
+
+    assert 'uint8_t value;' in normalized
+    assert 'uint8_t             value;' in preserved

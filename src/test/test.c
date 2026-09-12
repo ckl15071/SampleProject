@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "./test.h"
+#include <stdio.h> #include "./test.h"
 #include <stdint.h>
 
 void testTask( void );
@@ -35,11 +34,11 @@ void test( void )
 
 void testTask( void )
 {
-    uint8_t         u8_test;
-    uint8_t         u8_another;
+    uint8_t u8_test;
+    uint8_t u8_another;
 
     u8_test = (uint8_t)0;
-    u8_another = (uint8_t)1;
+    u8_another = (uint8_t)0x01;
 
     if ( ( u8_test == (uint8_t)0x00    )
       && ( u8_another == (uint8_t)0x01 ) )
@@ -50,6 +49,7 @@ void testTask( void )
 
             if ( u8g_value[ i ] == (uint8_t)0x00 )
             {
+
                 return;
             }
         }
@@ -58,7 +58,8 @@ void testTask( void )
 
 uint8_t u8_Encoder_GetValue( uint8_t u8_id )
 {
-    uint8_t u8t_value;
+    uint8_t u8t_value1;
+    uint8_t u8t_value2;
     u8t_value = u8g_value[ u8_id ];
     return u8t_value;
 }
