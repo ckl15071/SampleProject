@@ -13,5 +13,5 @@
         "C:/bin/mingw64/x86_64-w64-mingw32/include"
 
     ],
-    "python-envs.defaultEnvManager": "ms-python.python:system"
+    "python-envs.defaultEnvManager": "ms-python.python:system",
 }

@@ -2,8 +2,8 @@
 #include "./cmd.h"
 #include "../test/test.h"
 
-void cmd(void)
+void cmd( void )
 {
-    printf("cmd\n");
+    printf( "cmd\n" );
     sch();
 }

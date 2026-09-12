@@ -6,6 +6,15 @@ void testTask( void );
 
 uint8_t u8g_value[ 10 ];
 
+uint8_t u8g_add_u8u8_u8( uint8_t u8t_a, uint8_t u8t_b )
+{
+    uint8_t u8t_result;
+
+    u8t_result = u8t_a + u8t_b;
+
+    return u8t_result;
+}
+
 /******************************************************************************/
 /* @brief  Schedule function                                                  */
 /* @param  None                                                               */
@@ -13,37 +22,36 @@ uint8_t u8g_value[ 10 ];
 /******************************************************************************/
 void sch( void )
 {
-    printf("sch\n");
+    printf( "sch\n" );
     testTask();
 }
 
 void test( void )
 {
-    printf("test\n");
+    printf( "test\n" );
     sch();
     testTask();
 }
 
 void testTask( void )
 {
-    uint8_t u8_test;
-    uint8_t u8_another;
+    uint8_t         u8_test;
+    uint8_t         u8_another;
 
     u8_test = (uint8_t)0;
     u8_another = (uint8_t)1;
 
-    printf("testTask\n");
-    printf("u8_test: %u\n", u8_test);
-    printf("u8_another: %u\n", u8_another);
-    printf("testTask again\n");
-
-        if ( ( u8_test == ( uint8_t )0x00 )
-            && ( u8_another == ( uint8_t )0x01 ) )
+    if ( ( u8_test == (uint8_t)0x00    )
+      && ( u8_another == (uint8_t)0x01 ) )
     {
-        printf("u8_test is zero\n");
         for ( uint8_t i = 0; i < (uint8_t)10; i++ )
         {
             (void)u8_test;
+
+            if ( u8g_value[ i ] == (uint8_t)0x00 )
+            {
+                return;
+            }
         }
     }
 }
