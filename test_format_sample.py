@@ -448,6 +448,18 @@ def test_preserves_comment_columns_after_semicolon_and_call_spacing_changes():
     ] == comment_columns
 
 
+def test_code_formatter_file_entry_point_does_not_align_trailing_comments():
+    with tempfile.TemporaryDirectory() as directory:
+        path = Path(directory) / 'sample.c'
+        source = '    test(  );           // call\n'
+        path.write_text(source, encoding='shift_jis', newline='\r\n')
+
+        format_c_file(str(path))
+
+        line = path.read_text(encoding='shift_jis').splitlines()[0]
+        assert line == '    test();           // call'
+
+
 def test_configures_empty_function_call_parenthesis_spacing():
     src = 'call(  );\n'
 

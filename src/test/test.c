@@ -38,17 +38,17 @@ void testTask( void )
     uint8_t u8_test;
     uint8_t u8_another;
 
-    u8_test = (uint8_t)0;
-    u8_another = (uint8_t)0x01;
+    u8_test = (uint8_t)0;               /* 0‰Šú‰» */
+    u8_another = (uint8_t)0x01;     /* 0x01‰Šú‰» */
 
-    if ( ( u8_test == (uint8_t)0x00    )
-      && ( u8_another == (uint8_t)0x01 ) )
+    if ( ( u8_test == (uint8_t)0x00    )        /* ğŒ2 */
+      && ( u8_another == (uint8_t)0x01 ) )      /* ğŒ1 */
     {
-        for ( uint8_t i = 0; i < (uint8_t)10; i++ )
+        for ( uint8_t i = 0; i < (uint8_t)10; i++ )                     /* 10‰ñƒ‹[ƒv‚·‚é */
         {
             (void)u8_test;
 
-            if ( u8g_value[ i ] == (uint8_t)0x00 )
+            if ( u8g_value[ i ] == (uint8_t)0x00 )      /* 0‚¾‚Á‚½‚ç */
             {
 
                 return;
@@ -59,8 +59,8 @@ void testTask( void )
 
 uint8_t u8_Encoder_GetValue( uint8_t u8_id )
 {
-    uint8_t u8t_value1;             /* test  value */
-    uint8_t u8t_value2;             // test value
-    u8t_value = u8g_value[ u8_id ]; /* return */
+    uint8_t u8t_value1;                 /* test  value */
+    uint8_t u8t_value2;                 // test value
+    u8t_value = u8g_value[ u8_id ];     /* return */
     return u8t_value;
 }
