@@ -1,0 +1,8 @@
+{
+    "_comment_source_encoding": "フォーマッタが読み書きする文字コード。",
+    "source_encoding": "shift_jis",
+    "_comment_line_ending": "フォーマッタが出力する改行コード。",
+    "line_ending": "\r\n",
+    "_comment_normalize_variable_declaration_spacing": "trueの場合、変数宣言の型名と変数名の間を1スペースに統一する。",
+    "normalize_variable_declaration_spacing": true
+}

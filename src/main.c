@@ -2,11 +2,11 @@
 #include <stdint.h>
 
 /******************************************************************************/
-/* èª¬æ˜                                                                       */
-/* èª¬æ˜                                                                       */
-/* èª¬æ˜                                                                       */
-/* èª¬æ˜                                                                       */
-/* èª¬æ˜                                                                       */
+/* à–¾                                                                       */
+/* à–¾                                                                       */
+/* à–¾                                                                       */
+/* à–¾                                                                       */
+/* à–¾                                                                       */
 /******************************************************************************/
 int main( int argc, char **argv )
 {
@@ -14,11 +14,11 @@ int main( int argc, char **argv )
     uint8_t u8t_value2;
     uint8_t u8t_result;
 
-    test();
-    test();
-    test();
+    test(   );          // test
+    test(  );       /* test call 2*/
+    test()   ;      /* test call 3 */
 
-    u8t_result = u8g_add_u8u8_u8( u8t_value1, u8t_value2 );
+    u8t_result=u8g_add_u8u8_u8(u8t_value1,u8t_value2);      /* test */
 
     return u8t_result;
 }

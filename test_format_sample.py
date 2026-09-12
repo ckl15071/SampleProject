@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 
-from format_sample import format_c_file, format_c_text
+from code_formatter import format_c_file, format_c_text
 
 
 def test_format_c_text_is_generic_and_name_independent():
@@ -387,3 +387,62 @@ void run(void)
 
     assert 'uint8_t value;' in normalized
     assert 'uint8_t             value;' in preserved
+
+
+def test_preserves_include_line_breaks_and_repairs_joined_includes():
+    src = '''
+#include <stdio.h>
+#include "cmd.h"
+
+void run(void)
+{
+}
+'''
+    joined_src = src.replace('\n#include "cmd.h"', ' #include "cmd.h"')
+
+    out = format_c_text(src)
+    repaired = format_c_text(joined_src)
+
+    assert '#include <stdio.h>\n#include "cmd.h"' in out
+    assert '#include <stdio.h>\n#include "cmd.h"' in repaired
+
+
+def test_preserves_trailing_comment_column_when_line_content_shrinks():
+    src = '    uint8_t             value; // value storage\n'
+    comment_column = src.index('//')
+
+    out = format_c_text(src)
+
+    assert 'uint8_t value;' in out
+    assert out.index('//') == comment_column
+
+
+def test_preserves_trailing_block_comment_column_when_line_content_changes():
+    src = '    result = add_u8( first,second );      /* result value */\n'
+    comment_column = src.index('/*')
+
+    out = format_c_text(src)
+
+    assert 'result = add_u8( first, second );' in out
+    assert out.index('/*') == comment_column
+
+
+def test_preserves_comment_columns_after_semicolon_and_call_spacing_changes():
+    src = (
+        '    test(  ) ;           // test call 1\n'
+        '    test(  );       /* test call 2 */\n'
+        '    test( );      /* test call 3 */\n'
+    )
+    comment_columns = [
+        line.index('//') if '//' in line else line.index('/*')
+        for line in src.splitlines()
+    ]
+
+    out = format_c_text(src)
+    output_lines = out.splitlines()
+
+    assert 'test(  );' in output_lines[0]
+    assert [
+        line.index('//') if '//' in line else line.index('/*')
+        for line in output_lines
+    ] == comment_columns

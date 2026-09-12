@@ -1,12 +1,23 @@
 import argparse
+import json
 import re
 from pathlib import Path
 
 
-SOURCE_ENCODING = 'shift_jis'
-LINE_ENDING = '\r\n'
+CONFIG_PATH = Path(__file__).with_name('format_config.json')
+
+
+def load_config() -> dict:
+    """フォーマッタ設定をJSONファイルから読み込む。"""
+    with CONFIG_PATH.open(encoding='utf-8') as file:
+        return json.load(file)
+
+
+CONFIG = load_config()
+SOURCE_ENCODING = CONFIG['source_encoding']
+LINE_ENDING = CONFIG['line_ending']
 # Trueの場合、変数宣言の型名と変数名の間を1スペースに統一する。
-NORMALIZE_VARIABLE_DECLARATION_SPACING = True
+NORMALIZE_VARIABLE_DECLARATION_SPACING = CONFIG['normalize_variable_declaration_spacing']
 # (uint8_t)value のようなキャストを判定するためのC型パターン。
 CAST_TYPE_PATTERN = (
     r'(?:(?:const|volatile)\s+)*(?:(?:unsigned|signed|short|long)\s+)*'
@@ -22,6 +33,63 @@ def read_source_text(path: Path) -> str:
     except UnicodeDecodeError:
         # 初回のフォーマット時に既存UTF-8ファイルをShift-JISへ変換できるようにする。
         return path.read_text(encoding='utf-8')
+
+
+def find_line_comment_start(line: str) -> int | None:
+    """文字列・文字リテラルの外側にある末尾コメントの開始位置を返す。"""
+    quote = None
+    escaped = False
+
+    for index, character in enumerate(line[:-1]):
+        if quote:
+            if escaped:
+                escaped = False
+            elif character == '\\':
+                escaped = True
+            elif character == quote:
+                quote = None
+        elif character in {'"', "'"}:
+            quote = character
+        elif character == '/' and line[index + 1] in {'/', '*'}:
+            return index
+
+    return None
+
+
+def protect_trailing_comments(text: str) -> tuple[str, dict[str, tuple[int, str]]]:
+    """末尾コメントを保護し、整形前の開始列を記録する。"""
+    comments = {}
+    lines = []
+
+    for raw_line in text.splitlines(keepends=True):
+        ending = '\r\n' if raw_line.endswith('\r\n') else '\n' if raw_line.endswith('\n') else ''
+        line = raw_line[:-len(ending)] if ending else raw_line
+        comment_start = find_line_comment_start(line)
+
+        if comment_start is None or not line[:comment_start].strip():
+            lines.append(raw_line)
+            continue
+
+        marker = f'__FORMATTER_COMMENT_{len(comments)}__'
+        comments[marker] = (comment_start, line[comment_start:])
+        lines.append(f'{line[:comment_start].rstrip()} {marker}{ending}')
+
+    return ''.join(lines), comments
+
+
+def restore_trailing_comments(text: str, comments: dict[str, tuple[int, str]]) -> str:
+    """保護した末尾コメントを、整形前の開始列へ戻す。"""
+    for marker, (column, comment) in comments.items():
+        marker_start = text.find(marker)
+        if marker_start < 0:
+            continue
+
+        line_start = text.rfind('\n', 0, marker_start) + 1
+        code = text[line_start:marker_start].rstrip(' \t')
+        padding = ' ' * max(1, column - len(code))
+        text = f'{text[:line_start]}{code}{padding}{comment}{text[marker_start + len(marker):]}'
+
+    return text
 
 
 def normalize_indentation(text: str) -> str:
@@ -127,6 +195,9 @@ def format_c_text(
     後から関数や配列を追加してもフォーマッタ本体の変更は不要。
     """
 
+    # 同一行のコード幅が変わっても、末尾コメントの開始列を維持する。
+    text, trailing_comments = protect_trailing_comments(text)
+
     def normalize_function_signature(match):
         indent = match.group('indent')
         ret = match.group('ret').strip()
@@ -160,6 +231,13 @@ def format_c_text(
         cond = re.sub(rf'(?P<cast>\({CAST_TYPE_PATTERN}\))[ \t]+', r'\g<cast>', cond)
         cond = re.sub(r'\s*;\s*', '; ', cond)
         return f'{kw} ( {cond} )'
+
+    # 誤って同じ行になった連続#includeを、個別のプリプロセッサ行に戻す。
+    text = re.sub(
+        r'(?m)^(?P<first>[ \t]*#include[^\r\n]*?)[ \t]+(?P<next>#include\b)',
+        lambda m: f'{m.group("first")}\n{m.group("next")}',
+        text,
+    )
 
     # 関数宣言・定義を name( arguments ) の形に整える。
     text = re.sub(
@@ -253,7 +331,7 @@ def format_c_text(
 
     # 比較演算子直後の改行を結合して、条件式を1行として扱えるようにする。
     text = re.sub(
-        r'(?m)(?P<prefix>[ \t]*[^\r\n]*?(?:==|!=|<=|>=|<|>))[ \t]*\r?\n'
+        r'(?m)^(?![ \t]*#)(?P<prefix>[ \t]*[^\r\n]*?(?:==|!=|<=|>=|<|>))[ \t]*\r?\n'
         r'[ \t]*(?P<rhs>[^\r\n]+)',
         lambda m: f'{m.group("prefix").rstrip()} {m.group("rhs").lstrip()}',
         text,
@@ -317,6 +395,7 @@ def format_c_text(
     text = normalize_and_condition_group_close(text)
     text = align_condition_closing_parentheses(text)
     text = normalize_indentation(text)
+    text = restore_trailing_comments(text, trailing_comments)
     # 行末の不要なスペースとタブを削除する。
     return re.sub(r'(?m)[ \t]+$', '', text)
 

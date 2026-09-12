@@ -6,7 +6,7 @@
             "type": "process",
             "command": "C:\\Users\\daichi\\AppData\\Local\\Programs\\Python\\Python314\\python.exe",
             "args": [
-                "${workspaceFolder}\\format_sample.py",
+                "${workspaceFolder}\\code_formatter.py",
                 "${file}"
             ],
             "options": {
