@@ -1,23 +1,17 @@
-#include <stdint.h>
-#include "test.h"
-
-#include <stdio.h>
+#include "./test/test.h"
 
 /******************************************************************************/
 /* 説明                                                                       */
 /* 説明                                                                       */
 /* 説明                                                                       */
 /* 説明                                                                       */
+/* 説明                                                                       */
 /******************************************************************************/
-void test(void)
+int main(int argc, char **argv)
 {
-    printf("test\n");
-}
+    test();
+    test();
+    test();
 
-int main(int argc, char** argv)
-{
-    test();
-    test();
-    test();
     return 0;
 }
