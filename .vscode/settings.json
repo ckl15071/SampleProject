@@ -1,17 +1,13 @@
 {
-    "clangd.path": "C:\\bin\\clangd_22.1.6\\bin\\clangd.exe",
+    "clangd.path": "C:\\msys64\\ucrt64\\bin\\clangd.exe",
     "clangd.arguments": [
         "--compile-commands-dir=build",
-        "--query-driver=C:\\bin\\mingw64\\bin\\gcc.exe"
+        //"--query-driver=C:/msys64/ucrt64/bin/gcc.exe"
     ],
     "clangd.fallbackFlags": [
         "-std=c11",
         "-I${workspaceFolder}/src/test",
         "-isystem",
-        "C:/bin/mingw64/include",
-        "-isystem",
-        "C:/bin/mingw64/x86_64-w64-mingw32/include"
-
+        "C:/msys64/ucrt64/include"
     ],
-    "python-envs.defaultEnvManager": "ms-python.python:system",
 }

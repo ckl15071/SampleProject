@@ -50,6 +50,28 @@ void testTask( void )
 
             if ( u8g_value[ i ] == (uint8_t)0x00 )      /* 0‚¾‚Á‚½‚ç */
             {
+                switch ( u8g_value[ i ] )
+                {
+                case (uint8_t)0x00:
+                {
+                    /* 0‚Ìê‡‚Ìˆ— */
+                    if( 0x00 == u8g_value[ i ] )
+                    {
+                        return ;
+                    }
+                    break;
+                }
+                case (uint8_t)0x01:
+                    if( 0x00 == u8g_value[ i ] )
+                    {
+                        return ;
+                    }
+                    /* 1‚Ìê‡‚Ìˆ— */
+                    break;
+                default:
+                    /* ‚»‚Ì‘¼‚Ìê‡‚Ìˆ— */
+                    break;
+                }
 
                 return;
             }
@@ -61,6 +83,6 @@ uint8_t u8_Encoder_GetValue( uint8_t u8_id )
 {
     uint8_t u8t_value1;                 /* test  value */
     uint8_t u8t_value2;                 // test value
-    u8t_value = u8g_value[ u8_id ];     /* return */
-    return u8t_value;
+    u8t_value1 = u8g_value[ u8_id ];     /* return */
+    return u8t_value1;
 }
