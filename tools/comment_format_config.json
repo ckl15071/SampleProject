@@ -1,0 +1,4 @@
+{
+    "_comment_move_comments_to_next_multiple_of_four": "trueの場合、1列目以外のコメント開始位置を4の倍数列へ右方向に移動する。",
+    "move_comments_to_next_multiple_of_four": true
+}

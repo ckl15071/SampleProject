@@ -1,0 +1,13 @@
+{
+    "clangd.path": "C:\\msys64\\ucrt64\\bin\\clangd.exe",
+    "clangd.arguments": [
+        "--compile-commands-dir=build",
+        //"--query-driver=C:/msys64/ucrt64/bin/gcc.exe"
+    ],
+    "clangd.fallbackFlags": [
+        "-std=c11",
+        "-I${workspaceFolder}/src/test",
+        "-isystem",
+        "C:/msys64/ucrt64/include"
+    ],
+}

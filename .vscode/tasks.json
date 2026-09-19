@@ -1,0 +1,10 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "probe-gcc",
+			"type": "shell",
+			"command": "C:\\bin\\mingw64\\bin\\gcc.exe --version && C:\\bin\\mingw64\\bin\\gcc.exe -g -std=c11 -Isrc/test -Isrc/cmd -c src\\main.c -o %TEMP%\\main_probe.obj"
+		}
+	]
+}
