@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        // C言語開発
+        "llvm-vs-code-extensions.vscode-clangd",  // clangd
+        // CMake ビルド
+        "ms-vscode.cmake-tools",
+        "twxs.cmake",
+        // Python ツール (tools/*.py)
+        "ms-python.python"
+    ]
+}

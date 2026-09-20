@@ -1,5 +1,5 @@
 @echo off
-set PATH=C:\bin\mingw64\bin;%PATH%
+set PATH=%PATH%
 
 if "%1"=="clean" (
     rmdir /s /q build
