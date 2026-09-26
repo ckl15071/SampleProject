@@ -1,13 +1,13 @@
 {
-    "clangd.path": "C:\\msys64\\ucrt64\\bin\\clangd.exe",
+    //clangd.pathはユーザ環境のsettings.jsonにて設定
+    //"clangd.path": "",
     "clangd.arguments": [
         "--compile-commands-dir=build",
-        //"--query-driver=C:/msys64/ucrt64/bin/gcc.exe"
+        "--query-driver=**/gcc.exe,**/g++.exe,**/*-gcc.exe,**/*-g++.exe"
     ],
     "clangd.fallbackFlags": [
         "-std=c11",
-        "-I${workspaceFolder}/src/test",
-        "-isystem",
-        "C:/msys64/ucrt64/include"
+        "-I${workspaceFolder}/src/test"
+        // システムインクルードパスは.clangd経由でgccから自動取得する
     ],
 }
